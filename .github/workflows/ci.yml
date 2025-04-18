@@ -95,3 +95,12 @@ jobs:
         run: |
           echo "Root directory contents:" && ls -1
           echo "First 5 lines of finetune_dataset.jsonl:" && head -n 5 finetune_dataset.jsonl
+      # 12. Install OpenAI client
+      - name: Install OpenAI SDK
+        run: pip install openai
+
+      # 13. Kick off fine‑tune job
+      - name: Run fine‑tune
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python fine_tune.py
