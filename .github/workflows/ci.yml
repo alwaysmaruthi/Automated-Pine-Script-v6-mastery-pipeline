@@ -38,10 +38,15 @@ jobs:
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
 
-      - name: Preview dataset
+      - name: Preview training set
         run: |
-          echo "First 3 lines of finetune_dataset.jsonl:"
-          head -n 3 finetune_dataset.jsonl
+          echo "First 3 lines of training_dataset.jsonl:"
+          head -n 3 training_dataset.jsonl
+
+      - name: Preview validation set
+        run: |
+          echo "First 3 lines of validation_dataset.jsonl:"
+          head -n 3 validation_dataset.jsonl
 
       - name: Run fine‑tune
         env:
