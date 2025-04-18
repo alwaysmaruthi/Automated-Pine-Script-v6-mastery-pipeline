@@ -45,7 +45,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+     # 8. Install npm dependencies (pine-js via package.json)
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install
       - name: Lint Pine scripts
         run: node tests/lint_pinejs.js
