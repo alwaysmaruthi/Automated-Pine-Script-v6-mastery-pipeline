@@ -1,6 +1,7 @@
 name: Pine Mastery CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'spec_ingest.py'
