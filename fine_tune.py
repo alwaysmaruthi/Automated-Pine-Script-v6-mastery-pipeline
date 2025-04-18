@@ -23,8 +23,8 @@ print(f"📁 Uploaded file ID: {file_id}")
 print("Starting fine‑tune job…")
 ft_job = client.fine_tuning.jobs.create(
     training_file=file_id,
-    model="o4-mini-2025-04-16",
-    hyperparameters={ "n_epochs": 10 }
+    model="gpt-4.1",
+    hyperparameters={ "n_epochs": 1000}
 )
 print(f"🛠 Fine‑tune created: {ft_job.id}")
 print(f"🎯 Model endpoint: {ft_job.fine_tuned_model}")
