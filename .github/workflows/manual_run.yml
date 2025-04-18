@@ -1,54 +1,37 @@
+# .github/workflows/manual_run.yml
 name: Manual PineScript Jobs
 
 on:
   workflow_dispatch:
     inputs:
       fine_tune_id:
-        description: "Fine‑tune Job ID to poll (ignored here)"
-        required: false
+        description: "Fine‑tune Job ID to poll (ft‑…)"
+        required: true
       model_name:
-        description: "Model name for polling/test (ignored here)"
-        required: false
+        description: "Fine‑tuned Model name (gpt‑…:ft‑…)"
+        required: true
 
 jobs:
   run-fine-tune:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      # 1. Python setup
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
-      # 2. Install all deps
       - name: Install Python dependencies
         run: pip install requests beautifulsoup4 openai>=1.0.0
-
-      # 3. Ingest latest spec
       - name: Ingest Pine v6 spec
         run: python spec_ingest.py
-
-      # 4. Generate test scripts
       - name: Generate Pine tests
         run: python tests/generate_tests.py
-
-      # 5. Harvest community scripts
       - name: Harvest community scripts
         run: python harvest_scripts.py
-
-      # 6. Build fine‑tune dataset
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
-
-      # 7. Sanity check dataset exists
       - name: Check dataset file
-        run: |
-          echo "Dataset files in root:"
-          ls -1 *.jsonl
-
-      # 8. Run fine‑tune
+        run: ls -1 *.jsonl
       - name: Run fine‑tune
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -59,23 +42,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
       - name: Install OpenAI SDK v1.x
         run: pip install openai>=1.0.0
-
       - name: Poll fine‑tune status
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          FINE_TUNE_ID: ${{ inputs.fine_tune_id }}
+          FINE_TUNE_ID:      ${{ github.event.inputs.fine_tune_id }}
         run: python poll_finetune_status.py
-
       - name: Test fine‑tuned model
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          FINE_TUNED_MODEL: ${{ inputs.model_name }}
+          OPENAI_API_KEY:   ${{ secrets.OPENAI_API_KEY }}
+          FINE_TUNED_MODEL: ${{ github.event.inputs.model_name }}
         run: python test_finetuned_model.py
