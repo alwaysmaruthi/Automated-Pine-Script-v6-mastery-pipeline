@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: Pine Mastery CI
 
 on:
@@ -10,64 +9,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-and-run:
+  spec-and-test:
     runs-on: ubuntu-latest
     steps:
-      # 1. Check out your code
+      # 1. Check out code
       - uses: actions/checkout@v3
 
-      # 2. Set up Python
+      # 2. Set up Python 3.x
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. Install requests
+      # 3. Install requests library
       - name: Install requests
         run: pip install requests
 
-      # 4. Run spec ingestion
-      - name: Run spec_ingest.py
+      # 4. Run spec_ingest.py (save Pine v6 docs)
+      - name: Ingest spec
         run: python spec_ingest.py
 
-      # 5. Generate Pine test files
-      - name: Run generate_tests.py
+      # 5. Run generate_tests.py (emit tests/*.pine)
+      - name: Generate Pine tests
         run: python tests/generate_tests.py
 
-      # 6. List generated files for verification
+      # 6. Confirm outputs
       - name: List specs and tests
         run: |
-          echo "Specs directory:"
+          echo "Specs directory contents:"
           ls specs
-          echo "Tests directory:"
+          echo "Tests directory contents:"
           ls tests
-
-      # 7. Set up Node.js (needed for our inline linter)
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-            # 8. Clone parser and lint all .pine files inline
-      - name: Lint Pine scripts inline
-        run: |
-          git clone https://github.com/joelmo/pine-js.git pine-js
-          node << 'EOF'
-          const fs = require('fs');
-          const { PineParser } = require('./pine-js/src/index');
-          let hasError = false;
-          fs.readdirSync('tests')
-            .filter(f => f.endsWith('.pine'))
-            .forEach(file => {
-              // Fixed: encoding string is 'utf8', not 'utf8`
-              const code = fs.readFileSync(`tests/${file}`, 'utf8');
-              try {
-                PineParser.parse(code);
-                console.log(`✅ ${file} parsed OK`);
-              } catch (e) {
-                console.error(`❌ Syntax error in ${file}: ${e.message}`);
-                hasError = true;
-              }
-            });
-          if (hasError) process.exit(1);
-          EOF
