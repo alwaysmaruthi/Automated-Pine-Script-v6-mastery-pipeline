@@ -27,24 +27,35 @@ const fs = require('fs');
   // 4) Go directly to the sign‑in page
   await page.goto('https://www.tradingview.com/accounts/signin/', { waitUntil: 'domcontentloaded' });
 
-  // 5) Wait for and fill the login form
-  await page.waitForSelector('input[type="email"]',    { timeout: 30000 });
-  await page.fill(         'input[type="email"]',    user);
-  await page.fill(         'input[type="password"]', pass);
-  await page.click(        'button[type="submit"]');
+  // 5) Wait for and fill the email field (try multiple selectors)
+  const emailLocator = await page.waitForSelector(
+    'input[type="email"], input[name="username"], input[placeholder="Email"]',
+    { timeout: 30000 }
+  );
+  await emailLocator.fill(user);
 
-  // 6) Wait until we see the main TradingView logo (logged‑in state)
+  // 6) Fill the password field
+  const passLocator = await page.waitForSelector(
+    'input[type="password"], input[name="password"], input[placeholder="Password"]',
+    { timeout: 30000 }
+  );
+  await passLocator.fill(pass);
+
+  // 7) Submit the form
+  await page.click('button[type="submit"], button:has-text("Log in")');
+
+  // 8) Wait until logged in
   await page.waitForSelector('.tv-logo__link', { timeout: 60000 });
 
-  // 7) Open chart & Pine Editor
+  // 9) Open chart & Pine Editor
   await page.goto('https://www.tradingview.com/chart/', { waitUntil: 'domcontentloaded' });
   await page.click('button[title="Open Pine Editor"]');
 
-  // 8) Paste and compile
-  await page.fill( 'textarea.cm-content', code);
+  // 10) Paste and compile
+  await page.fill('textarea.cm-content', code);
   await page.click('button:has-text("Add to Chart")');
 
-  // 9) Check for compile errors
+  // 11) Check for compile errors
   const err = await page.$('.tv-error-message__content');
   if (err) {
     console.error(`Compile error in ${file}:`, await err.textContent());
