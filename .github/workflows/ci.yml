@@ -9,6 +9,7 @@ on:
       - 'community_sources.txt'
       - 'harvest_scripts.py'
       - 'generate_finetune_data.py'
+      - 'fine_tune.py'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -16,24 +17,24 @@ jobs:
   pipeline:
     runs-on: ubuntu-latest
     steps:
-      # 1. Check out code
+      # 1) Check out the repo
       - uses: actions/checkout@v3
 
-      # 2. Set up Python
+      # 2) Set up Python 3.x
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. Install core Python deps for spec ingestion & tests
-      - name: Install requests & bs4
+      # 3) Install scraping & parsing deps
+      - name: Install requests & BeautifulSoup
         run: pip install requests beautifulsoup4
 
-      # 4. Ingest the latest Pine v6 spec
+      # 4) Ingest the latest Pine v6 spec
       - name: Ingest Pine v6 spec
         run: python spec_ingest.py
 
-      # 5. Diff the two most recent spec snapshots
+      # 5) Diff against the previous snapshot
       - name: Diff previous and current spec
         run: |
           python - << 'EOF'
@@ -41,72 +42,70 @@ jobs:
           SPEC_DIR = "specs"
           files = sorted(f for f in os.listdir(SPEC_DIR)
                          if f.startswith("pine_v6_spec_") and f.endswith(".html"))
-          if len(files) < 2:
-              print("Only one spec snapshot; skipping diff check.")
-              sys.exit(0)
-          prev, curr = files[-2], files[-1]
-          old = open(f"{SPEC_DIR}/{prev}", encoding="utf-8").read().splitlines()
-          new = open(f"{SPEC_DIR}/{curr}", encoding="utf-8").read().splitlines()
-          diff = list(difflib.unified_diff(old, new, fromfile=prev, tofile=curr, lineterm=""))
+          if len(files) < 2: sys.exit(0)
+          old = open(f"{SPEC_DIR}/{files[-2]}", encoding="utf-8").read().splitlines()
+          new = open(f"{SPEC_DIR}/{files[-1]}", encoding="utf-8").read().splitlines()
+          diff = list(difflib.unified_diff(old, new,
+                                           fromfile=files[-2], tofile=files[-1], lineterm=""))
           if diff:
-              print(f"📘 Spec changed between {prev} and {curr}:")
+              print("📘 Spec changed:")
               print("\n".join(diff))
               sys.exit(1)
-          else:
-              print("No changes detected in Pine v6 spec.")
-              sys.exit(0)
           EOF
 
-      # 6. Generate the Pine test scripts
+      # 6) Generate PineScript tests from the spec
       - name: Generate Pine tests
         run: python tests/generate_tests.py
 
-      # 7. List spec & test outputs
-      - name: List specs and tests
-        run: |
-          echo "Specs directory contents:" && ls specs
-          echo "Tests directory contents:" && ls tests
-
-      # … earlier steps …
-
-      # Install harvesting deps (requests + bs4)
-      - name: Install harvesting deps
-        run: pip install requests beautifulsoup4
-
-      # Harvest community scripts
+      # 7) Harvest community scripts
       - name: Harvest community scripts
         run: python harvest_scripts.py
 
-      # Preview community scripts folder
-      - name: List community scripts
-        run: |
-          echo "Community directory contents:" && ls community
-
-      # Ensure bs4 is available for fine‑tune generator
-      - name: Install bs4 for fine‑tune step
-        run: pip install beautifulsoup4
-
-      # Generate fine‑tune dataset
+      # 8) Build the fine-tune dataset
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
+
+      # 9) Preview the first few lines to verify format
       - name: Preview fine‑tune dataset format
         run: |
-          echo "First 3 lines of dataset:"
+          echo "First 3 lines of finetune_dataset.jsonl:"
           head -n 3 finetune_dataset.jsonl
 
-      # Check that the file got written
+      # 10) List the dataset file
       - name: List generated dataset file
-        run: |
-          echo "Root directory contents:" && ls -1
-          echo "First 5 lines of finetune_dataset.jsonl:" && head -n 5 finetune_dataset.jsonl
-      # 12. Install OpenAI client
-      - name: Install OpenAI SDK
-        run: pip install openai
+        run: ls -1 *.jsonl
+
+      # 11) Install OpenAI Python SDK v1.x
       - name: Install OpenAI SDK v1
         run: pip install "openai>=1.0.0"
 
-      # 13. Kick off fine‑tune job
+      # 12) Run the fine‑tune job
       - name: Run fine‑tune
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python fine_tune.py
+
+      # ─── Upload artifacts for manual download ────────────────────────────
+      - name: Upload fine‑tune dataset
+        uses: actions/upload-artifact@v3
+        with:
+          name: finetune-dataset
+          path: finetune_dataset.jsonl
+
+      - name: Upload spec snapshot
+        uses: actions/upload-artifact@v3
+        with:
+          name: pine-spec-html
+          path: specs/*.html
+
+      - name: Upload generated tests
+        uses: actions/upload-artifact@v3
+        with:
+          name: pine-tests
+          path: tests/*.pine
+
+      - name: Upload community scripts
+        uses: actions/upload-artifact@v3
+        with:
+          name: community-scripts
+          path: community/*.pine
