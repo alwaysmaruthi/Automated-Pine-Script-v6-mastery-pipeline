@@ -24,25 +24,24 @@ const fs = require('fs');
   const context = await browser.newContext();
   const page = await context.newPage();
 
-  // 4) Go to homepage and click Log in
-  await page.goto('https://www.tradingview.com');
-  await page.click('text=Log in', { timeout: 30000 });
+  // 4) Go directly to the sign‑in page
+  await page.goto('https://www.tradingview.com/accounts/signin/', { waitUntil: 'domcontentloaded' });
 
-  // 5) Wait for the email input in the modal
-  await page.waitForSelector('input[type="email"]', { timeout: 30000 });
-  await page.fill('input[type="email"]',    user);
-  await page.fill('input[type="password"]', pass);
-  await page.click('button:has-text("Log in")');
+  // 5) Wait for and fill the login form
+  await page.waitForSelector('input[type="email"]',    { timeout: 30000 });
+  await page.fill(         'input[type="email"]',    user);
+  await page.fill(         'input[type="password"]', pass);
+  await page.click(        'button[type="submit"]');
 
-  // 6) Wait for the chart page to confirm login
-  await page.waitForSelector('.tv-logo__link', { timeout: 30000 });
+  // 6) Wait until we see the main TradingView logo (logged‑in state)
+  await page.waitForSelector('.tv-logo__link', { timeout: 60000 });
 
-  // 7) Open Pine Editor
-  await page.goto('https://www.tradingview.com/chart/');
+  // 7) Open chart & Pine Editor
+  await page.goto('https://www.tradingview.com/chart/', { waitUntil: 'domcontentloaded' });
   await page.click('button[title="Open Pine Editor"]');
 
   // 8) Paste and compile
-  await page.fill('.pine-editor textarea', code);
+  await page.fill( 'textarea.cm-content', code);
   await page.click('button:has-text("Add to Chart")');
 
   // 9) Check for compile errors
