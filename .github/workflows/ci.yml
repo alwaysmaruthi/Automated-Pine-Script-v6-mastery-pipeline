@@ -6,6 +6,7 @@ on:
     paths:
       - 'spec_ingest.py'
       - 'tests/**'
+      - 'community_sources.txt'
       - 'harvest_scripts.py'
       - 'generate_finetune_data.py'
       - 'fine_tune.py'
@@ -16,38 +17,52 @@ jobs:
   pipeline:
     runs-on: ubuntu-latest
     steps:
+      # 1) Check out the repo
       - uses: actions/checkout@v3
 
+      # 2) Set up Python 3.x
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
+      # 3) Install dependencies
       - name: Install deps
         run: pip install requests beautifulsoup4 openai>=1.0.0
 
+      # 4) Ingest the latest Pine v6 spec
       - name: Ingest Pine v6 spec
         run: python spec_ingest.py
 
+      # 5) Generate PineScript tests from the spec
       - name: Generate Pine tests
         run: python tests/generate_tests.py
 
+      # 6) Harvest community scripts
       - name: Harvest community scripts
         run: python harvest_scripts.py
 
+      # 7) Build the fine‑tune dataset (train + validation)
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
 
+      # 8) Preview training set
       - name: Preview training set
         run: |
           echo "First 3 lines of training_dataset.jsonl:"
           head -n 3 training_dataset.jsonl
 
+      # 9) Preview validation set
       - name: Preview validation set
         run: |
           echo "First 3 lines of validation_dataset.jsonl:"
           head -n 3 validation_dataset.jsonl
 
+      # 10) List the dataset files
+      - name: List dataset files
+        run: ls -1 *.jsonl
+
+      # 11) Run the fine‑tune job
       - name: Run fine‑tune
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
