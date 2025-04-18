@@ -1,0 +1,3 @@
+//@version=6
+indicator("Test ta.highest")
+plot(ta.highest(close, 10))
