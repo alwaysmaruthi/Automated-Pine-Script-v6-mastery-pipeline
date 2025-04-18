@@ -1,12 +1,12 @@
 name: Pine Mastery CI
 
 on:
-  workflow_dispatch:
   push:
     paths:
       - 'spec_ingest.py'
       - 'tests/**'
       - '.github/workflows/**'
+  workflow_dispatch:
 
 jobs:
   setup-and-run:
@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      # 3. Install dependencies
+      # 3. Install requests
       - name: Install requests
         run: pip install requests
 
@@ -40,8 +40,6 @@ jobs:
           ls specs
           echo "Tests directory:"
           ls tests
-          
-      # … existing steps …
 
       # 7. Set up Node.js for Playwright
       - name: Set up Node.js
@@ -49,11 +47,12 @@ jobs:
         with:
           node-version: '18'
 
-      # 8. Install Playwright
-      - name: Install Playwright
+      # 8. Install Playwright & download browsers
+      - name: Install Playwright & Browsers
         run: |
           npm init -y
           npm install playwright
+          npx playwright install --with-deps
 
       # 9. Run headless compile test
       - name: Headless compile
