@@ -1,26 +1,29 @@
-# fine_tune.py
+#!/usr/bin/env python3
 import os
-import openai
+from openai import OpenAI
 
-# 1) Read your API key from env
-openai.api_key = os.getenv("OPENAI_API_KEY")
-if not openai.api_key:
+# Read API key
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
     raise RuntimeError("Missing OPENAI_API_KEY")
 
-# 2) Upload the JSONL dataset you generated
+# Instantiate the new v1 client
+client = OpenAI(api_key=api_key)
+
+# Upload the dataset (v1 File API)
 print("Uploading training file…")
-upload_resp = openai.File.create(
+upload = client.files.create(
     file=open("finetune_dataset.jsonl", "rb"),
     purpose="fine-tune"
 )
-file_id = upload_resp.id
+file_id = upload.id
 print(f"📁 Uploaded file ID: {file_id}")
 
-# 3) Create the fine-tune job
-print("Starting fine-tune job…")
-ft = openai.FineTune.create(
+# Start the fine‑tune job (v1 Fine Tuning API)
+print("Starting fine‑tune job…")
+ft_job = client.fine_tuning.jobs.create(
     training_file=file_id,
-    model="gpt-4o-mini"       # or another suitable base
+    model="gpt-4o-mini"
 )
-print("🛠 Fine-tune created:", ft.id)
-print("Status endpoint:", ft.fine_tuned_model)
+print(f"🛠 Fine‑tune created: {ft_job.id}")
+print(f"🎯 Model endpoint: {ft_job.fine_tuned_model}")
