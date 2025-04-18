@@ -89,6 +89,10 @@ jobs:
       # Generate fine‑tune dataset
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
+      - name: Preview fine‑tune dataset format
+        run: |
+          echo "First 3 lines of dataset:"
+          head -n 3 finetune_dataset.jsonl
 
       # Check that the file got written
       - name: List generated dataset file
