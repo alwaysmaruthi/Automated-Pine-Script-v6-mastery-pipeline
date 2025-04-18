@@ -5,28 +5,35 @@ on:
   push:
     paths:
       - 'spec_ingest.py'
-      - 'specs/**'
       - 'tests/**'
+      - 'community_sources.txt'
+      - 'harvest_scripts.py'
+      - 'generate_finetune_data.py'
       - '.github/workflows/**'
   workflow_dispatch:
 
 jobs:
-  spec-and-test:
+  pipeline:
     runs-on: ubuntu-latest
     steps:
+      # 1. Check out code
       - uses: actions/checkout@v3
 
+      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install requests
-        run: pip install requests
+      # 3. Install core Python deps for spec ingestion & tests
+      - name: Install requests & bs4
+        run: pip install requests beautifulsoup4
 
+      # 4. Ingest the latest Pine v6 spec
       - name: Ingest Pine v6 spec
         run: python spec_ingest.py
 
+      # 5. Diff the two most recent spec snapshots
       - name: Diff previous and current spec
         run: |
           python - << 'EOF'
@@ -50,21 +57,41 @@ jobs:
               sys.exit(0)
           EOF
 
+      # 6. Generate the Pine test scripts
       - name: Generate Pine tests
         run: python tests/generate_tests.py
-      - name: Install harvesting deps
-        run: pip install requests beautifulsoup4
-      - name: Harvest community scripts
-        run: python harvest_scripts.py
-      - name: List community scripts
-        run: |
-         echo "Community directory contents:"
-                   ls community
+
+      # 7. List spec & test outputs
       - name: List specs and tests
         run: |
           echo "Specs directory contents:" && ls specs
           echo "Tests directory contents:" && ls tests
+
+      # … earlier steps …
+
+      # Install harvesting deps (requests + bs4)
+      - name: Install harvesting deps
+        run: pip install requests beautifulsoup4
+
+      # Harvest community scripts
+      - name: Harvest community scripts
+        run: python harvest_scripts.py
+
+      # Preview community scripts folder
+      - name: List community scripts
+        run: |
+          echo "Community directory contents:" && ls community
+
+      # Ensure bs4 is available for fine‑tune generator
+      - name: Install bs4 for fine‑tune step
+        run: pip install beautifulsoup4
+
+      # Generate fine‑tune dataset
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
-      - name: Preview fine‑tune dataset
-        run: head -n 5 finetune_dataset.jsonl
+
+      # Check that the file got written
+      - name: List generated dataset file
+        run: |
+          echo "Root directory contents:" && ls -1
+          echo "First 5 lines of finetune_dataset.jsonl:" && head -n 5 finetune_dataset.jsonl
