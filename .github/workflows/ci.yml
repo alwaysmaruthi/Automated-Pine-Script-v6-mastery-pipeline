@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: Pine Mastery CI
 
 on:
@@ -47,11 +48,11 @@ jobs:
         with:
           node-version: '18'
 
-      # 8. Install pine-js parser from GitHub
+      # 8. Initialize npm and install pine-js from GitHub
       - name: Install pine-js parser
         run: |
           npm init -y
-          npm install github:joelmo/pine-js
+          npm install git+https://github.com/joelmo/pine-js.git
 
       # 9. Lint generated Pine scripts with pine-js
       - name: Lint Pine scripts (pine-js)
