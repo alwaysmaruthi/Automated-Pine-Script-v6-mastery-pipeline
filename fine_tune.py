@@ -24,7 +24,7 @@ print("Starting fine‑tune job…")
 ft_job = client.fine_tuning.jobs.create(
     training_file=file_id,
     model="gpt-3.5-turbo",
-    n_epochs=10       # ← run 10 full passes over your data
+    epochs=10      # ← use 'epochs' instead of 'n_epochs'
 )
 print(f"🛠 Fine‑tune created: {ft_job.id}")
 print(f"🎯 Model endpoint: {ft_job.fine_tuned_model}")
