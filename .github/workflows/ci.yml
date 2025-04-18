@@ -48,7 +48,7 @@ jobs:
         with:
           node-version: '18'
 
-      # 8. Clone parser and lint all .pine files inline
+            # 8. Clone parser and lint all .pine files inline
       - name: Lint Pine scripts inline
         run: |
           git clone https://github.com/joelmo/pine-js.git pine-js
@@ -59,7 +59,8 @@ jobs:
           fs.readdirSync('tests')
             .filter(f => f.endsWith('.pine'))
             .forEach(file => {
-              const code = fs.readFileSync(`tests/${file}`, 'utf8`);
+              // Fixed: encoding string is 'utf8', not 'utf8`
+              const code = fs.readFileSync(`tests/${file}`, 'utf8');
               try {
                 PineParser.parse(code);
                 console.log(`✅ ${file} parsed OK`);
