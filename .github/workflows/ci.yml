@@ -52,7 +52,14 @@ jobs:
 
       - name: Generate Pine tests
         run: python tests/generate_tests.py
-
+      - name: Install harvesting deps
+        run: pip install requests beautifulsoup4
+      - name: Harvest community scripts
+        run: python harvest_scripts.py
+      - name: List community scripts
+        run: |
+         echo "Community directory contents:"
+                   ls community
       - name: List specs and tests
         run: |
           echo "Specs directory contents:" && ls specs
