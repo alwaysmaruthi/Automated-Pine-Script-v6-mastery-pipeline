@@ -25,6 +25,17 @@ jobs:
       - name: Install requests
         run: pip install requests
 
+            # 4. Run spec ingestion
+      - name: Ingest Pine v6 spec
+        run: python spec_ingest.py
+
+      - name: Diff previous and current spec
+        run: python spec_diff.py
+
+      # 6. Generate Pine test files
+      - name: Run generate_tests.py
+        run: python tests/generate_tests.py
+
       # 4. Run spec_ingest.py (save Pine v6 docs)
       - name: Ingest spec
         run: python spec_ingest.py
