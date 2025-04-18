@@ -1,7 +1,9 @@
+// Add this file as `package.json` in the root of your repo:
+
 {
   "name": "pine-mastery-pipeline",
   "version": "1.0.0",
-  "description": "CI for Pine-Script v6 mastery",
+  "description": "CI for Pine‑Script v6 mastery",
   "dependencies": {
     "pine-js": "git+https://github.com/joelmo/pine-js.git"
   }
