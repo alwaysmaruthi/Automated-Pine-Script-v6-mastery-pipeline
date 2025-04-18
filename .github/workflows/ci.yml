@@ -64,3 +64,7 @@ jobs:
         run: |
           echo "Specs directory contents:" && ls specs
           echo "Tests directory contents:" && ls tests
+      - name: Generate fine‑tune dataset
+        run: python generate_finetune_data.py
+      - name: Preview fine‑tune dataset
+        run: head -n 5 finetune_dataset.jsonl
