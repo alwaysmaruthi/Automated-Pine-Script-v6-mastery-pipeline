@@ -46,6 +46,9 @@ jobs:
       - name: Generate Pine tests
         run: python tests/generate_tests.py
 
+      - name: Diff previous and current spec
+        run: python spec_diff.py
+
       # 6. Confirm outputs
       - name: List specs and tests
         run: |
