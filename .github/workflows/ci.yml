@@ -98,6 +98,8 @@ jobs:
       # 12. Install OpenAI client
       - name: Install OpenAI SDK
         run: pip install openai
+      - name: Install OpenAI SDK v1
+        run: pip install "openai>=1.0.0"
 
       # 13. Kick off fine‑tune job
       - name: Run fine‑tune
