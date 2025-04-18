@@ -40,3 +40,24 @@ jobs:
           ls specs
           echo "Tests directory:"
           ls tests
+          
+      # … existing steps …
+
+      # 7. Set up Node.js for Playwright
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 8. Install Playwright
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+
+      # 9. Run headless compile test
+      - name: Headless compile
+        env:
+          TV_USER: ${{ secrets.TV_USER }}
+          TV_PASS: ${{ secrets.TV_PASS }}
+        run: node tests/headless_compile.js
