@@ -46,6 +46,7 @@ def parse_tests():
     return samples
 
 def build_dataset(spec_entries, test_entries):
+    # Each record is a dict with a single "messages" key
     for func, desc in spec_entries:
         prompt = f"What does PineScript function `{func}` do?"
         completion = (
