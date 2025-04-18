@@ -53,20 +53,20 @@ jobs:
         run: |
           git clone https://github.com/joelmo/pine-js.git pine-js
           node << 'EOF'
-          const fs = require('fs')
-          const { PineParser } = require('./pine-js/src/index')
-          let hasError = false
+          const fs = require('fs');
+          const { PineParser } = require('./pine-js/src/index');
+          let hasError = false;
           fs.readdirSync('tests')
             .filter(f => f.endsWith('.pine'))
             .forEach(file => {
-              const code = fs.readFileSync(`tests/${file}`, 'utf8`)
+              const code = fs.readFileSync(`tests/${file}`, 'utf8`);
               try {
-                PineParser.parse(code)
-                console.log(`✅ ${file} parsed OK`)
+                PineParser.parse(code);
+                console.log(`✅ ${file} parsed OK`);
               } catch (e) {
-                console.error(`❌ Syntax error in ${file}: ${e.message}`)
-                hasError = true
+                console.error(`❌ Syntax error in ${file}: ${e.message}`);
+                hasError = true;
               }
-            })
-          if (hasError) process.exit(1)
+            });
+          if (hasError) process.exit(1);
           EOF
