@@ -2,26 +2,23 @@
 import os, time
 from openai import OpenAI
 
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-jobs = client.fine_tuning.jobs.list().data
-
-# assume the first entry is the most recent
-latest_job = jobs[0].id
-print("Latest fine‑tune job ID:", latest_job)
-# 1) Load config
-api_key = os.getenv("OPENAI_API_KEY")
-job_id  = os.getenv("FINE_TUNE_JOB_ID")
-if not api_key:
+# ─── Config ──────────────────────────────────────────────────────────────────
+API_KEY = os.getenv("OPENAI_API_KEY")
+if not API_KEY:
     raise RuntimeError("Missing OPENAI_API_KEY")
-if not job_id:
-    raise RuntimeError("Missing FINE_TUNE_JOB_ID")
 
-# 2) Init client
-client = OpenAI(api_key=api_key)
+# ─── Init client ──────────────────────────────────────────────────────────────
+client = OpenAI(api_key=API_KEY)
 
-# 3) Poll until done or failed
-print(f"Polling job {job_id}…")
+# ─── Pick the latest fine‑tune job ────────────────────────────────────────────
+jobs = client.fine_tuning.jobs.list().data
+if not jobs:
+    raise RuntimeError("No fine‑tune jobs found in your account")
+latest = jobs[0]
+job_id = latest.id
+print(f"[✔] Polling latest fine‑tune job: {job_id}")
+
+# ─── Poll until completion ────────────────────────────────────────────────────
 while True:
     job = client.fine_tuning.jobs.retrieve(job_id)
     status = job.status
@@ -29,9 +26,9 @@ while True:
     if status == "succeeded":
         break
     if status in ("failed", "cancelled"):
-        print("\n⚠️ Job did not succeed. Fetching failure events:")
-        events = client.fine_tuning.jobs.list_events(job_id)
-        for ev in events.data:
+        print("\n⚠️ Job did not succeed. Fetching events:")
+        events = client.fine_tuning.jobs.list_events(job_id).data
+        for ev in events:
             ts = ev.created_at or ev.timestamp
             print(f"- {ts} | {ev.level.upper()} | {ev.message}")
         raise RuntimeError(f"Fine‑tune job ended with status '{status}'")
@@ -40,12 +37,14 @@ while True:
 model_name = job.fine_tuned_model
 print(f"\n✅ Fine‑tuned model ready: {model_name}\n")
 
-# 4) Send test prompt
+# ─── Run your sample prompt ───────────────────────────────────────────────────
 prompt = "Write a PineScript v6 snippet to plot a 20-period EMA in red."
 print("=== Prompt ===\n" + prompt + "\n")
+
 resp = client.chat.completions.create(
     model=model_name,
-    messages=[{"role":"user","content":prompt}],
+    messages=[{"role": "user", "content": prompt}],
     max_tokens=150
 )
+
 print("=== Response ===\n" + resp.choices[0].message.content)
