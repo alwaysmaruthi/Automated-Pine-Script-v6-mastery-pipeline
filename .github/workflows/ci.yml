@@ -47,12 +47,12 @@ jobs:
         with:
           node-version: '18'
 
-      # 8. Install Pine‑Script parser
-      - name: Install parser
+      # 8. Install pine-js parser from GitHub
+      - name: Install pine-js parser
         run: |
           npm init -y
-          npm install pine-script-parser
+          npm install github:joelmo/pine-js
 
-      # 9. Lint generated Pine scripts
-      - name: Lint Pine scripts
-        run: node tests/lint_pine.js
+      # 9. Lint generated Pine scripts with pine-js
+      - name: Lint Pine scripts (pine-js)
+        run: node tests/lint_pinejs.js
