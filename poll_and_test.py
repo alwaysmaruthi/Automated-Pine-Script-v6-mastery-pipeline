@@ -2,6 +2,13 @@
 import os, time
 from openai import OpenAI
 
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+jobs = client.fine_tuning.jobs.list().data
+
+# assume the first entry is the most recent
+latest_job = jobs[0].id
+print("Latest fine‑tune job ID:", latest_job)
 # 1) Load config
 api_key = os.getenv("OPENAI_API_KEY")
 job_id  = os.getenv("FINE_TUNE_JOB_ID")
