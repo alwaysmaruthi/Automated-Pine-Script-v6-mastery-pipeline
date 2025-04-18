@@ -1,4 +1,4 @@
-# generate_finetune_data.py
+#!/usr/bin/env python3
 import os
 import json
 from bs4 import BeautifulSoup
@@ -10,18 +10,16 @@ SNAPSHOT_PREFIX = "pine_v6_spec_"
 MAX_SAMPLES     = 500
 
 def latest_spec_file():
-    files = sorted(f for f in os.listdir(SPEC_DIR)
-                   if f.startswith(SNAPSHOT_PREFIX) and f.endswith(".html"))
+    files = sorted(
+        f for f in os.listdir(SPEC_DIR)
+        if f.startswith(SNAPSHOT_PREFIX) and f.endswith(".html")
+    )
     return os.path.join(SPEC_DIR, files[-1])
 
 def parse_spec(html_path):
-    """
-    Extract (function_name, description) pairs from the spec HTML.
-    Assumes function sections are <h2 id="func"> followed by <p>desc</p>.
-    """
+    entries = []
     with open(html_path, encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
-    entries = []
     for h2 in soup.find_all("h2"):
         func = h2.get("id", "").strip()
         if not func:
@@ -35,10 +33,6 @@ def parse_spec(html_path):
     return entries
 
 def parse_tests():
-    """
-    For each test_xxx.pine, use the function name from the filename
-    and the code as the completion.
-    """
     samples = []
     for fname in os.listdir(TESTS_DIR):
         if not fname.endswith(".pine"):
@@ -52,30 +46,37 @@ def parse_tests():
     return samples
 
 def build_dataset(spec_entries, test_entries):
-    """
-    Build prompt-completion pairs:
-    - Spec: prompt "What does PineScript function <func> do?"
-      completion: "<desc>\nExample:\n<func>(...)\n"
-    - Tests: prompt "Write a PineScript v6 snippet using <func>"
-      completion: "<code>"
-    """
     for func, desc in spec_entries:
         prompt = f"What does PineScript function `{func}` do?"
-        completion = f"{desc}\nExample usage:\n```pinescript\n{func}(...)\n```"
-        yield {"prompt": prompt, "completion": completion}
+        completion = (
+            f"{desc}\n\nExample:\n```pinescript\n{func}(...)\n```"
+        )
+        yield {
+            "messages": [
+                {"role": "user",      "content": prompt},
+                {"role": "assistant", "content": completion}
+            ]
+        }
     for func, code in test_entries:
         prompt = f"Write a PineScript v6 snippet using `{func}`"
         completion = f"```pinescript\n{code}\n```"
-        yield {"prompt": prompt, "completion": completion}
+        yield {
+            "messages": [
+                {"role": "user",      "content": prompt},
+                {"role": "assistant", "content": completion}
+            ]
+        }
 
 def main():
     spec_path    = latest_spec_file()
     spec_entries = parse_spec(spec_path)
     test_entries = parse_tests()
+    count = 0
     with open(OUTPUT_FILE, "w", encoding="utf-8") as out:
         for sample in build_dataset(spec_entries, test_entries):
             out.write(json.dumps(sample, ensure_ascii=False) + "\n")
-    print(f"[✔] Wrote {len(spec_entries)+len(test_entries)} samples to {OUTPUT_FILE}")
+            count += 1
+    print(f"[✔] Wrote {count} chat‑style samples to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
