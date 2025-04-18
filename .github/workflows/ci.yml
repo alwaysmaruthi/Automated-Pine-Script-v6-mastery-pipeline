@@ -28,6 +28,8 @@ jobs:
       # 4. Run spec_ingest.py (save Pine v6 docs)
       - name: Ingest spec
         run: python spec_ingest.py
+      - name: Run spec_diff.py
+        run: python spec_diff.py
 
       # 5. Run generate_tests.py (emit tests/*.pine)
       - name: Generate Pine tests
