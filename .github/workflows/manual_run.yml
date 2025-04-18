@@ -11,16 +11,38 @@ on:
         required: true
 
 jobs:
-  poll-finetune:
+  run-fine-tune:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
-      - name: Install OpenAI SDK
-        run: pip install openai
+
+      - name: Install OpenAI SDK v1.x
+        run: pip install "openai>=1.0.0"
+
+      - name: Run fine‑tune
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python fine_tune.py
+
+  poll-and-test:
+    needs: run-fine-tune
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install OpenAI SDK v1.x
+        run: pip install "openai>=1.0.0"
+
       - name: Poll fine‑tune status
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -28,17 +50,6 @@ jobs:
           export FINE_TUNE_ID="${{ github.event.inputs.fine_tune_id }}"
           python poll_finetune_status.py
 
-  test-finetuned-model:
-    needs: poll-finetune
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
-      - name: Install OpenAI SDK
-        run: pip install openai
       - name: Test fine‑tuned model
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
