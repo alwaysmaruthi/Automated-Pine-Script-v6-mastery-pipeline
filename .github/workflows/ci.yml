@@ -5,7 +5,6 @@ on:
     paths:
       - 'spec_ingest.py'
       - 'tests/**'
-      - 'package.json'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -13,26 +12,28 @@ jobs:
   setup-and-run:
     runs-on: ubuntu-latest
     steps:
-      # Checkout repo
+      # 1. Check out your code
       - uses: actions/checkout@v3
 
-      # Python setup
+      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # Spec ingestion
+      # 3. Install requests
       - name: Install requests
         run: pip install requests
+
+      # 4. Run spec ingestion
       - name: Run spec_ingest.py
         run: python spec_ingest.py
 
-      # Generate Pine tests
+      # 5. Generate Pine test files
       - name: Run generate_tests.py
         run: python tests/generate_tests.py
 
-      # Verify outputs
+      # 6. List generated files for verification
       - name: List specs and tests
         run: |
           echo "Specs directory:"
@@ -40,13 +41,16 @@ jobs:
           echo "Tests directory:"
           ls tests
 
-      # Node.js & linting
+      # 7. Set up Node.js (needed for our linter script)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-     # 8. Install npm dependencies (pine-js via package.json)
-      - name: Install npm dependencies
-        run: npm install
-      - name: Lint Pine scripts
-        run: node tests/lint_pinejs.js
+
+      # 8. Clone pine-js parser source (no npm install)
+      - name: Clone pine-js
+        run: git clone https://github.com/joelmo/pine-js.git tests/pine-js
+
+      # 9. Lint generated Pine scripts via the cloned parser
+      - name: Lint Pine scripts (via clone)
+        run: node tests/lint_with_clone.js
