@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: Pine Mastery CI
 
 on:
@@ -41,16 +42,31 @@ jobs:
           echo "Tests directory:"
           ls tests
 
-      # 7. Set up Node.js (needed for our linter script)
+      # 7. Set up Node.js (needed for our inline linter)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 8. Clone pine-js parser source (no npm install)
-      - name: Clone pine-js
-        run: git clone https://github.com/joelmo/pine-js.git tests/pine-js
-
-      # 9. Lint generated Pine scripts via the cloned parser
-      - name: Lint Pine scripts (via clone)
-        run: node tests/lint_with_clone.js
+      # 8. Clone parser and lint all .pine files inline
+      - name: Lint Pine scripts inline
+        run: |
+          git clone https://github.com/joelmo/pine-js.git pine-js
+          node << 'EOF'
+          const fs = require('fs')
+          const { PineParser } = require('./pine-js/src/index')
+          let hasError = false
+          fs.readdirSync('tests')
+            .filter(f => f.endsWith('.pine'))
+            .forEach(file => {
+              const code = fs.readFileSync(`tests/${file}`, 'utf8`)
+              try {
+                PineParser.parse(code)
+                console.log(`✅ ${file} parsed OK`)
+              } catch (e) {
+                console.error(`❌ Syntax error in ${file}: ${e.message}`)
+                hasError = true
+              }
+            })
+          if (hasError) process.exit(1)
+          EOF
