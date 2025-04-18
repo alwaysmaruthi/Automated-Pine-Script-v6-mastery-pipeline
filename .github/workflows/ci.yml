@@ -1,9 +1,11 @@
+# .github/workflows/ci.yml
 name: Pine Mastery CI
 
 on:
   push:
     paths:
       - 'spec_ingest.py'
+      - 'specs/**'
       - 'tests/**'
       - '.github/workflows/**'
   workflow_dispatch:
@@ -12,47 +14,46 @@ jobs:
   spec-and-test:
     runs-on: ubuntu-latest
     steps:
-      # 1. Check out code
       - uses: actions/checkout@v3
 
-      # 2. Set up Python 3.x
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # 3. Install requests library
       - name: Install requests
         run: pip install requests
 
-            # 4. Run spec ingestion
       - name: Ingest Pine v6 spec
         run: python spec_ingest.py
 
       - name: Diff previous and current spec
-        run: python spec_diff.py
+        run: |
+          python - << 'EOF'
+          import os, sys, difflib
+          SPEC_DIR = "specs"
+          files = sorted(f for f in os.listdir(SPEC_DIR)
+                         if f.startswith("pine_v6_spec_") and f.endswith(".html"))
+          if len(files) < 2:
+              print("Only one spec snapshot; skipping diff check.")
+              sys.exit(0)
+          prev, curr = files[-2], files[-1]
+          old = open(f"{SPEC_DIR}/{prev}", encoding="utf-8").read().splitlines()
+          new = open(f"{SPEC_DIR}/{curr}", encoding="utf-8").read().splitlines()
+          diff = list(difflib.unified_diff(old, new, fromfile=prev, tofile=curr, lineterm=""))
+          if diff:
+              print(f"📘 Spec changed between {prev} and {curr}:")
+              print("\n".join(diff))
+              sys.exit(1)
+          else:
+              print("No changes detected in Pine v6 spec.")
+              sys.exit(0)
+          EOF
 
-      # 6. Generate Pine test files
-      - name: Run generate_tests.py
-        run: python tests/generate_tests.py
-
-      # 4. Run spec_ingest.py (save Pine v6 docs)
-      - name: Ingest spec
-        run: python spec_ingest.py
-      - name: Run spec_diff.py
-        run: python spec_diff.py
-
-      # 5. Run generate_tests.py (emit tests/*.pine)
       - name: Generate Pine tests
         run: python tests/generate_tests.py
 
-      - name: Diff previous and current spec
-        run: python spec_diff.py
-
-      # 6. Confirm outputs
       - name: List specs and tests
         run: |
-          echo "Specs directory contents:"
-          ls specs
-          echo "Tests directory contents:"
-          ls tests
+          echo "Specs directory contents:" && ls specs
+          echo "Tests directory contents:" && ls tests
