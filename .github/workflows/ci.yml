@@ -1,0 +1,41 @@
+name: Pine Mastery CI
+
+on:
+  push:
+    paths:
+      - 'spec_ingest.py'
+      - 'tests/**'
+      - '.github/workflows/**'
+
+jobs:
+  setup-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out your code
+      - uses: actions/checkout@v3
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 3. Install dependencies
+      - name: Install requests
+        run: pip install requests
+
+      # 4. Run spec ingestion
+      - name: Run spec_ingest.py
+        run: python spec_ingest.py
+
+      # 5. Generate Pine test files
+      - name: Run generate_tests.py
+        run: python tests/generate_tests.py
+
+      # 6. List generated files for verification
+      - name: List specs and tests
+        run: |
+          echo "Specs directory:"
+          ls specs
+          echo "Tests directory:"
+          ls tests
