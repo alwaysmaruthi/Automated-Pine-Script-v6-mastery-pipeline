@@ -13,7 +13,7 @@ if not job_id:
 # 2) Init client
 client = OpenAI(api_key=api_key)
 
-# 3) Poll until done
+# 3) Poll until done or failed
 print(f"Polling job {job_id}…")
 while True:
     job = client.fine_tuning.jobs.retrieve(job_id)
@@ -22,15 +22,20 @@ while True:
     if status == "succeeded":
         break
     if status in ("failed", "cancelled"):
-        raise RuntimeError(f"Job ended with status '{status}'")
+        print("\n⚠️ Job did not succeed. Fetching failure events:")
+        events = client.fine_tuning.jobs.list_events(job_id)
+        for ev in events.data:
+            ts = ev.created_at or ev.timestamp
+            print(f"- {ts} | {ev.level.upper()} | {ev.message}")
+        raise RuntimeError(f"Fine‑tune job ended with status '{status}'")
     time.sleep(60)
 
 model_name = job.fine_tuned_model
-print(f"📦 Fine‑tuned model ready: {model_name}")
+print(f"\n✅ Fine‑tuned model ready: {model_name}\n")
 
 # 4) Send test prompt
 prompt = "Write a PineScript v6 snippet to plot a 20-period EMA in red."
-print("\n=== Prompt ===\n" + prompt + "\n")
+print("=== Prompt ===\n" + prompt + "\n")
 resp = client.chat.completions.create(
     model=model_name,
     messages=[{"role":"user","content":prompt}],
