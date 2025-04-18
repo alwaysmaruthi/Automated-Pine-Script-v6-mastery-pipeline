@@ -1,6 +1,7 @@
-// tests/lint_pinejs.js
+// tests/lint_with_clone.js
 const fs = require('fs');
-const { PineParser } = require('pine-js');
+// Use the cloned parser source
+const { PineParser } = require('./pine-js/src/index');
 
 (async () => {
   const files = fs.readdirSync('tests').filter(f => f.endsWith('.pine'));
