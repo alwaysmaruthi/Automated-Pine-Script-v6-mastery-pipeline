@@ -41,22 +41,18 @@ jobs:
           echo "Tests directory:"
           ls tests
 
-      # 7. Set up Node.js for Playwright
+      # 7. Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 8. Install Playwright & download browsers
-      - name: Install Playwright & Browsers
+      # 8. Install Pine‑Script parser
+      - name: Install parser
         run: |
           npm init -y
-          npm install playwright
-          npx playwright install --with-deps
+          npm install pine-script-parser
 
-      # 9. Run headless compile test
-      - name: Headless compile
-        env:
-          TV_USER: ${{ secrets.TV_USER }}
-          TV_PASS: ${{ secrets.TV_PASS }}
-        run: node tests/headless_compile.js
+      # 9. Lint generated Pine scripts
+      - name: Lint Pine scripts
+        run: node tests/lint_pine.js
