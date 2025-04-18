@@ -61,7 +61,7 @@ jobs:
       - name: Harvest community scripts
         run: python harvest_scripts.py
 
-      # 8) Build the fine-tune dataset
+      # 8) Build the fine‑tune dataset
       - name: Generate fine‑tune dataset
         run: python generate_finetune_data.py
 
@@ -87,25 +87,25 @@ jobs:
 
       # ─── Upload artifacts for manual download ────────────────────────────
       - name: Upload fine‑tune dataset
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: finetune-dataset
           path: finetune_dataset.jsonl
 
       - name: Upload spec snapshot
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: pine-spec-html
           path: specs/*.html
 
       - name: Upload generated tests
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: pine-tests
           path: tests/*.pine
 
       - name: Upload community scripts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: community-scripts
           path: community/*.pine
